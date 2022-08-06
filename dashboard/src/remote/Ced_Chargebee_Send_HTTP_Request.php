@@ -272,17 +272,9 @@ class Ced_Chargebee_Send_HTTP_Request {
      */
     public function ced_chargebee_pause_subs($subscription_id){
 
-      $subscription_id='16BXzGTCbOzsKGow';
-
       $action ='subscriptions/'.$subscription_id;
-
-
       $pauses_subscription=array('pause_option'=>'end_of_term');
-      
-      
       $subscription_paused=$this->PostHttpRequest( $action, $pauses_subscription);
-
-
 	  	return $subscription_paused;
 
     }
@@ -296,7 +288,6 @@ class Ced_Chargebee_Send_HTTP_Request {
      */
     public function ced_chargebee_delete_subs($subscription_id){
 
-      $subscription_id='16BXzGTCbOzsKGow';
       $action ='subscriptions/'.$subscription_id.'/delete';
       $subscription_deleted=$this->PostHttpRequest( $action );
       return $subscription_deleted;

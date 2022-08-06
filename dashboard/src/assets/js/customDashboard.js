@@ -2,6 +2,8 @@ var dashboard_loader_overlay = '<div class="ced_overlay"><div class="ced_overlay
 const url = window.location.href;
 const urlParams = new URLSearchParams(url);
 var current_user = '';
+
+sessionStorage.setItem("offsets", []);
 	
 $(document).ready(
     function(){
@@ -280,8 +282,7 @@ function subscriptionEXpirationMail(){
 jQuery(document).on("change", "#per_page", function (event){
 
     let section = $('.ced-filter-all-wrapper').attr('id');
-    let pageNum = $('.current-page').val();
-    tableAjax(section, pageNum)
+    tableAjax(section,'')
 
 })
 
@@ -289,10 +290,9 @@ jQuery(document).on("change", "#per_page", function (event){
 jQuery(document).on("click", ".ced_table_pagination", function (event) {
 
     let section = $('.ced-filter-all-wrapper').attr('id');
-    let pageNum = $(this).attr('id');
-    //let attr = $(this).data('attr');
+    let cls = $(this).attr('class');
 
-    tableAjax(section, pageNum)
+    tableAjax(section,cls)
 
 })
 
@@ -312,20 +312,22 @@ jQuery(document).on("click", "#apply_head_filters", function(event) {
     }
 
     let section = $('.ced-filter-all-wrapper').attr('id');
-    let pageNum = $('.current-page').val();
-    tableAjax(section, pageNum)
+    // let pageNum = $('.current-page').val();
+    tableAjax(section,'')
 
 })
 
 
-function tableAjax(section, pageNum) {
+function tableAjax(section,cls) {
 
-    console.log( section, pageNum )
-
+    console.log( section )
     let filters = {};
 
     filters['key']   = $('#head_filter_key').val(); 
     filters['value'] = $('#table_filters').val();
+
+    let prev_off = $('.previous-page').attr('id');
+    let nxt_off = $('.next-page').attr('id');
 
     // if (section == 'product') {
     //     filters['title'] = $('.ced-filter-all-wrapper').find('#filter_title').is(':checked');
@@ -350,7 +352,6 @@ function tableAjax(section, pageNum) {
     let per_page   = $('#per_page').val();
     // let start_date = $('#start_date').val();
     // let end_date   = $('#end_date').val();
-
     // let order_status = $('#order_status').val();
 
     $.ajax({
@@ -369,7 +370,9 @@ function tableAjax(section, pageNum) {
             section: section,
             dataType: 'html',
             function: 'tableFilters',
-            pageNum: pageNum
+            prev_off: prev_off,
+            nxt_off: nxt_off,
+            cls: cls
             
         },
         success: function (response) {
@@ -382,6 +385,20 @@ function tableAjax(section, pageNum) {
 
             $(document).find('table').find('tbody').children().remove(); 
             $(document).find('table').find('tbody').append(response.html); 
+            $(document).find('.previous-page').attr( 'id', response.previousOffset)
+            $(document).find('.next-page').attr( 'id' , response.nextOffset)
+
+            if( response.nextOffset.length == 0 ){
+                $('.next-page').attr('disabled', 'disabled');
+            } else{
+                $('.next-page').removeAttr('disabled');
+            }
+
+            if( response.previousOffset.length == 0 ){
+                $('.previous-page').attr('disabled', 'disabled');
+            } else{
+                $('.previous-page').removeAttr('disabled');
+            }
 
             // $('.current-page').val(response.page);
             // $('.next-page').attr('id', parseInt(response.page + 1));
@@ -436,10 +453,6 @@ jQuery(document).on("click", ".control-subscription", function(){
     subscription_data['customer_id']  = $('#pause-subs').attr('attrCustomerId');
     subscription_data['delete']       = $('#delete-subs').is(':checked');
 
-    // let checked = $(this).is(':checked');
-    // let pageNum = $('.current-page').val();
-    // console.log( customer_id, control_subs, checked );
-
     $.ajax({
         type: "POST",
         url: 'dashboardAjax.php',
@@ -449,7 +462,7 @@ jQuery(document).on("click", ".control-subscription", function(){
         },
         success: function(response){
             console.log(response);
-            //$('.content').append(response);
+            $('#side-overlay').find('.control-subscription').prepend(response);
             
         }
     });

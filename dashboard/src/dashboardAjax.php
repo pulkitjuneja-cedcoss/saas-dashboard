@@ -1,5 +1,8 @@
 <?php
 
+  global $offsets; 
+  $offsets = array();
+
    require './coreFunctions.php';
    $function = isset( $_POST['function'] ) ? $_POST['function'] : '';
   // echo $function;
@@ -34,19 +37,42 @@
       // $woo_user_id     = isset( $_POST['woo_user_id'] ) ? sanitize_text_field( $_POST['woo_user_id'] ) : '';
       // $ebay_user_id    = isset( $_POST['ebay_user_id'] ) ? sanitize_text_field( $_POST['ebay_user_id'] ) : '';
 
-      $section         = isset( $_POST['section'] )  ?  $_POST['section']  : '';
-      $per_page        = isset( $_POST['per_page'] ) ?  $_POST['per_page'] : 10;
-      $CurrentPageNum  = isset( $_POST['pageNum'] )  ?  $_POST['pageNum']  : 0;
+      $section   = isset( $_POST['section'] )  ?  $_POST['section']  : '';
+      $per_page  = isset( $_POST['per_page'] ) ?  $_POST['per_page'] : 1;
+      $prev_off  = isset( $_POST['prev_off'] )  ?  $_POST['prev_off']  : '';
+      $nxt_off   = isset( $_POST['nxt_off'] )  ?  $_POST['nxt_off']  : '';
+      $cls       = isset( $_POST['cls'] )  ?  $_POST['cls']  : '';
 
       // $order_status    = isset( $_POST['order_status'] ) ? sanitize_text_field( $_POST['order_status'] ) : 0;  
       // $start_date      = isset( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : 0;  
       // $end_date        = isset( $_POST['end_date'] )   ? sanitize_text_field( $_POST['end_date'] ) : 0;
 
+      session_start();
+      $_SESSION['offsets'][] = $prev_off;
+      // echo "<pre>";
+      // print_r( $_SESSION['offsets']);
+      // $offsets[] = $prev_off;
+
+      // echo strpos( $cls, 'next-page'); 
+      // echo strpos( $cls, 'previous-page');
+      if( !empty( strpos( $cls, 'next-page') ) ) {
+         $CurrentPageNum = $nxt_off;
+         $off = $nxt_off;
+      }
+
+      if( !empty( strpos( $cls, 'previous-page') ) ) {
+         $CurrentPageNum = $prev_off;
+         $cnt = count($_SESSION['offsets']);
+         $off = $_SESSION['offsets'][$cnt-2];
+      }
+
+      // echo $CurrentPageNum;
+
       require './remote/Ced_Chargebee_Send_HTTP_Request.php';
       $curl = new Ced_Chargebee_Send_HTTP_Request();
 
       $tableHtml = '';
-      $allSubscriptions = $curl->ced_chargebee_get_all_subscription( '', 'in_trial', '', '', '', '', $CurrentPageNum );
+      $allSubscriptions = $curl->ced_chargebee_get_all_subscription( $per_page, '', '', '', '', '', $CurrentPageNum );
       $allSubscriptions = json_decode( $allSubscriptions, true);
 
       //  $tableRows   = isset( $apiResponse['list'] ) ? $apiResponse['list'] : array();
@@ -84,13 +110,22 @@
          }
       }
 
-      $nextOffset = isset( $allSubscriptions['next_offset'] ) ? $allSubscriptions['next_offset'] : 0;
+      $nextOffset = isset( $allSubscriptions['next_offset'] ) ? $allSubscriptions['next_offset'] : '';
+
+      if( !empty( strpos( $cls, 'next-page') ) ) {
+         $off2 = $nextOffset;
+      }
+
+      if( !empty( strpos( $cls, 'previous-page') ) ) {
+         $off2 = $prev_off;
+      }
       
       echo json_encode(
          array(
             'html' => $tableHtml,
-            'nextOffset' => $nextOffset,
-            'previousOffset' => $CurrentPageNum
+            'nextOffset' => $off2,
+            'previousOffset' => $off,
+            'offsets' => $_SESSION['offsets']
          )
       ); 
       die;   
@@ -98,15 +133,24 @@
    }
 
    function controlCustomerSubscription(){
-      $filter = isset( $_POST['filter'] ) ? $_POST['filter'] : '';
 
-      if( $filter == 'pause' ){
+      $subscription_data = isset( $_POST['subscription_data'] ) ? $_POST['subscription_data'] : '';
+      require './remote/Ced_Chargebee_Send_HTTP_Request.php';
+      $curl = new Ced_Chargebee_Send_HTTP_Request();
 
+      if( $subscription_data['pause'] ){
+         $response = $curl->ced_chargebee_pause_subs( $subscription_data['customer_id'] );
+         $response = json_decode( $response, true);
+         print_r($response);
       }
 
-      if( $filter == 'delete' ){
-         
+      if( $subscription_data['delete'] ){
+         $response = $curl->ced_chargebee_delete_subs( $subscription_data['customer_id'] );
+         $response = json_decode( $response, true); 
+
+         print_r($response);
       }
+      die;
    }
 
    function preparePlan(){

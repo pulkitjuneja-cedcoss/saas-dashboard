@@ -82,11 +82,11 @@
                   $nextDisabled     = isset( $nextOffset )  ?  '' : 'disabled';
                   $previousDisabled = isset($previousOffset) ? '' : 'disabled';
                   ?>
-                  <button <?php echo $previousDisabled; ?> data-attr="previous-page" class="previous-page button ced_table_pagination" id = "<?php echo $previousOffset; ?>">
+                  <button <?php echo $previousDisabled; ?> data-attr="previous-page" class="button ced_table_pagination previous-page" id = "<?php echo $previousOffset; ?>">
                     <span aria-hidden="true">Previous›</span>
                   </button>
                   
-                  <button <?php echo $nextDisabled; ?> data-attr="next-page" class="next-page button ced_table_pagination" id = <?php echo $nextOffset; ?>>
+                  <button <?php echo $nextDisabled; ?> data-attr="next-page" class="button ced_table_pagination next-page" id = <?php echo $nextOffset; ?>>
                       <span aria-hidden="true">Next »</span>
                   </button>
                   </span>
